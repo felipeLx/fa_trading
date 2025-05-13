@@ -1,0 +1,17 @@
+venv/
+env
+.env
+__pycache__/
+__pycache__
+airflow/airflow.cfg
+airflow/airflow.db
+airflow/logs
+airflow/*.sh
+airflow/simple_auth_manager_passwords.json.generated
+airflow/*.db-shm
+airflow/*.db-wal
+airflow/*.pid
+airflow/*.log
+airflow/*.egg-info
+airflow/*.json.*
+airflow/simple_auth_manager_passwords.json.generated
