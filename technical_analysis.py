@@ -1,7 +1,7 @@
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
-from database import initialize_database, insert_daily_analysis, save_balance_sheet_data, save_historical_prices
+from database import insert_daily_analysis, insert_yearly_analysis, save_balance_sheet_data, save_historical_prices, insert_asset_analysis
 import time
 import requests
 from dotenv import load_dotenv
@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import joblib
+from asset_analysis import analyze_asset
+import numpy as np
 
 load_dotenv()
 
@@ -39,8 +41,8 @@ def fetch_market_and_balance_sheet_data(ticker):
 
     url = f"https://brapi.dev/api/quote/{ticker}"
     params = {
-        'range': '5d',
-        'interval': '1d',
+        'range': '1mo',
+        'interval': '90m',
         'fundamental': 'true',
         'dividends': 'true',
         'modules': 'balanceSheetHistory',
@@ -67,7 +69,7 @@ def process_market_and_balance_sheet_data(data):
     try:
         market_data = data['results'][0]  # Use the latest market data
         balance_sheet_data = data['results'][0]['balanceSheetHistory'][0]  # Use the most recent balance sheet
-        historical_data = data['results'][0]['historicalDataPrice'][-5:]  # Use the last 5 days of historical data
+        historical_data = data['results'][0]['historicalDataPrice'][-26:]  # Use the last 5 days of historical data
 
         # Extract relevant market data 
         market_info = {
@@ -213,11 +215,32 @@ def save_historical_prices_to_db(ticker, historical_prices):
     except Exception as e:
         print(f"Failed to save historical prices for {ticker}: {e}")
 
+def calculate_rsi(prices, period=14):
+    """Calculate the Relative Strength Index (RSI)."""
+    deltas = np.diff(prices)
+    gains = np.where(deltas > 0, deltas, 0)
+    losses = np.where(deltas < 0, -deltas, 0)
+
+    avg_gain = np.convolve(gains, np.ones(period) / period, mode='valid')
+    avg_loss = np.convolve(losses, np.ones(period) / period, mode='valid')
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+
+    return np.concatenate((np.full(period - 1, np.nan), rsi))
+
+def calculate_macd(prices, short_period=12, long_period=26, signal_period=9):
+    """Calculate MACD and Signal Line."""
+    short_ema = pd.Series(prices).ewm(span=short_period, adjust=False).mean()
+    long_ema = pd.Series(prices).ewm(span=long_period, adjust=False).mean()
+
+    macd = short_ema - long_ema
+    signal_line = macd.ewm(span=signal_period, adjust=False).mean()
+
+    return macd, signal_line
+
 def main():
     tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
-
-    # Initialize the database to ensure tables exist
-    initialize_database()
 
     all_features = []
     all_labels = []
@@ -235,14 +258,74 @@ def main():
                 financial_ratios = calculate_financial_ratios(balance_sheet_info)
 
                 print(f"Saving financial data for {ticker} to the database...")
-                save_financial_data_to_db(ticker, balance_sheet_info, financial_ratios)
+                save_balance_sheet_data((
+                    ticker,
+                    balance_sheet_info['endDate'],
+                    balance_sheet_info['totalCurrentAssets'],
+                    balance_sheet_info['totalCurrentLiabilities'],
+                    balance_sheet_info['totalLiab'],
+                    balance_sheet_info['totalStockholderEquity'],
+                    financial_ratios.get('current_ratio'),
+                    financial_ratios.get('debt_to_equity_ratio')
+                ))
 
                 print(f"Saving historical prices for {ticker} to the database...")
-                save_historical_prices_to_db(ticker, historical_prices)
+                for price in historical_prices:
+                    save_historical_prices((
+                        ticker,
+                        price['date'],
+                        price['open'],
+                        price['high'],
+                        price['low'],
+                        price['close'],
+                        price['volume'],
+                        price['adjustedClose']
+                    ))
 
-                print(f"Calculating stop-loss and take-profit levels for {ticker}...")
-                stop_loss, take_profit = calculate_stop_loss_take_profit_levels(historical_prices)
-                print(f"Stop-loss: {stop_loss}, Take-profit: {take_profit}")
+                print(f"Saving daily analysis for {ticker} to the database...")
+                close_prices = [p['close'] for p in historical_prices]
+
+                # Calculate RSI, MACD, and Signal Line
+                rsi_values = calculate_rsi(close_prices)
+                macd_values, signal_line_values = calculate_macd(close_prices)
+
+                for i, price in enumerate(historical_prices):
+                    # Calculate short_ma and long_ma using moving averages
+                    short_ma = sum(close_prices[max(0, i-2):i+1]) / min(3, i+1)  # Example: 3-period moving average
+                    long_ma = sum(close_prices[:i+1]) / (i+1)  # Example: cumulative moving average
+
+                    rsi = rsi_values[i] if i < len(rsi_values) else None
+                    macd = macd_values[i] if i < len(macd_values) else None
+                    signal_line = signal_line_values[i] if i < len(signal_line_values) else None
+
+                    insert_daily_analysis((
+                        ticker,
+                        price['date'],
+                        price['close'],
+                        short_ma,
+                        long_ma,
+                        rsi,
+                        macd,
+                        signal_line
+                    ))
+
+                print(f"Saving yearly analysis for {ticker} to the database...")
+                insert_yearly_analysis((
+                    historical_prices[0]['date'],  # Most recent date
+                    historical_prices[0]['close'],  # Most recent close price
+                    ticker,
+                ))
+
+                print(f"Analyzing asset for {ticker}...")
+                asset_analysis = analyze_asset(market_data['results'][0]['defaultKeyStatistics'], market_info['regularMarketPrice'])
+                insert_asset_analysis((
+                    ticker,
+                    asset_analysis['forward_pe'],
+                    asset_analysis['profit_margins'],
+                    asset_analysis['beta'],
+                    asset_analysis['dividend_yield'],
+                    asset_analysis['peg_ratio']
+                ))
 
                 print(f"Preparing features and labels for {ticker}...")
                 features, labels = prepare_features_and_labels(market_data['results'], market_info, financial_ratios)

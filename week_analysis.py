@@ -26,35 +26,27 @@ def analyze_weekly_data_from_db(ticker):
         'end_date': historical_prices[0]['date']
     }
 
-def save_weekly_analysis_to_csv(filename, analysis_results):
-    """Save the weekly analysis results to a CSV file, avoiding duplicates."""
-    try:
-        existing_rows = set()
-
-        # Read existing rows to avoid duplicates
+def save_weekly_analysis_to_db(analysis_results):
+    """Save the weekly analysis results to the database."""
+    for result in analysis_results:
         try:
-            with open(filename, mode='r', encoding='utf-8') as file:
-                reader = csv.DictReader(file)
-                for row in reader:
-                    existing_rows.add((row['ticker'], row['start_date'], row['end_date']))
-        except FileNotFoundError:
-            pass  # File doesn't exist yet, so no duplicates to check
+            # Prepare data for insertion
+            data = (
+                result['ticker'],
+                result['end_date'],
+                result['average_close'],
+                None,  # Placeholder for short_ma
+                None,  # Placeholder for long_ma
+                None,  # Placeholder for rsi
+                None,  # Placeholder for macd
+                None   # Placeholder for signal_line
+            )
 
-        # Write new rows, avoiding duplicates
-        with open(filename, mode='a', newline='', encoding='utf-8') as file:
-            writer = csv.DictWriter(file, fieldnames=['ticker', 'average_close', 'start_date', 'end_date'])
-
-            # Write the header only if the file is empty
-            if file.tell() == 0:
-                writer.writeheader()
-
-            for result in analysis_results:
-                if (result['ticker'], result['start_date'], result['end_date']) not in existing_rows:
-                    writer.writerow(result)
-
-        print(f"Weekly analysis results saved to {filename}.")
-    except Exception as e:
-        print(f"Failed to save weekly analysis results to CSV: {e}")
+            # Insert into the database using insert_daily_analysis
+            insert_daily_analysis(data)
+            print(f"Inserted weekly analysis data for {result['ticker']} into the database.")
+        except Exception as e:
+            print(f"Failed to insert weekly analysis data for {result['ticker']}: {e}")
 
 if __name__ == "__main__":
     tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3"]
@@ -67,4 +59,4 @@ if __name__ == "__main__":
             analysis_results.append(result)
 
     if analysis_results:
-        save_weekly_analysis_to_csv("weekly_analysis.csv", analysis_results)
+        save_weekly_analysis_to_db(analysis_results)

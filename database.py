@@ -1,199 +1,140 @@
-import sqlite3
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from datetime import datetime, timezone
 
-def initialize_database():
-    """Initialize the SQLite database and create tables in airflow.db."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
+# Load environment variables
+load_dotenv()
 
-    # Create a table for daily analysis
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS daily_analysis (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticker TEXT NOT NULL,
-            date TEXT NOT NULL,
-            close_price REAL NOT NULL,
-            short_ma REAL,
-            long_ma REAL,
-            rsi REAL,
-            macd REAL,
-            signal_line REAL
-        )
-    ''')
+"""Initialize the PostgreSQL database and create tables."""
+SUPABASE_URL = os.getenv("DATABASE_URL")
+SUPABASE_KEY = os.getenv("DATABASE_KEY")
 
-    # Create a table for yearly analysis
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS yearly_analysis (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticker TEXT NOT NULL,
-            date TEXT NOT NULL,
-            close_price REAL NOT NULL
-        )
-    ''')
-
-    # Create a table for balance sheet data if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS balance_sheet (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticker TEXT NOT NULL,
-            end_date TEXT NOT NULL,
-            total_current_assets REAL,
-            total_current_liabilities REAL,
-            total_liabilities REAL,
-            total_stockholder_equity REAL,
-            current_ratio REAL,
-            debt_to_equity_ratio REAL
-        )
-    ''')
-
-    # Create a table for historical prices if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS historical_prices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticker TEXT NOT NULL,
-            date TEXT NOT NULL,
-            open REAL,
-            high REAL,
-            low REAL,
-            close REAL,
-            volume INTEGER,
-            adjusted_close REAL
-        )
-    ''')
-
-    conn.commit()
-    conn.close()
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def insert_daily_analysis(data):
-    """Insert data into the daily_analysis table in airflow.db."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
-
-    cursor.executemany('''
-        INSERT INTO daily_analysis (ticker, date, close_price, short_ma, long_ma, rsi, macd, signal_line)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', data)
-
-    conn.commit()
-    conn.close()
+    """Insert data into the daily_analysis table."""
+    date, close_price, short_ma, long_ma, rsi, macd, signal_line, ticker = data
+    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    result = supabase.table("daily_analysis").insert(
+        {"date": date, "close_price": close_price, "short_ma": short_ma, "long_ma": long_ma, "rsi": rsi, "macd": macd, "signal_line": signal_line, "ticker": ticker, "user_id": os.getenv("USER_ID")}).execute()
+    
+    if result:
+        print(f"Inserted daily analysis data for {date}")
+    else:
+        print(f"Failed to insert daily analysis data for {date}")
 
 def insert_yearly_analysis(data):
-    """Insert data into the yearly_analysis table in airflow.db."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
+    """Insert data into the yearly_analysis table."""
+    date, close_price, ticker = data
+    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    result = supabase.table("yearly_analysis").insert(
+        {"date": date, "close_price": close_price, "ticker": ticker, "user_id": os.getenv("USER_ID")}).execute()
+    
+    if result:
+        print(f"Inserted yearly analysis data for {date}")
+    else:
+        print(f"Failed to insert yearly analysis data for {date}")
 
-    cursor.executemany('''
-        INSERT INTO yearly_analysis (ticker, date, close_price)
-        VALUES (?, ?, ?)
-    ''', data)
-
-    conn.commit()
-    conn.close()
-
-def save_balance_sheet_data(ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio):
+def save_balance_sheet_data(data):
     """Save balance sheet data and financial ratios to the database."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
+    ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio = data
 
-    # Insert the data into the table
-    cursor.execute('''
-        INSERT INTO balance_sheet (
-            ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio))
 
-    conn.commit()
-    conn.close()
+    result = supabase.table("balance_sheet").insert(
+        {"ticker": ticker, "end_date": end_date, "total_current_assets": total_current_assets, "total_current_liabilities": total_current_liabilities, "total_liabilities": total_liabilities, "total_stockholder_equity": total_stockholder_equity, "current_ratio": current_ratio, "debt_to_equity_ratio": debt_to_equity_ratio, "user_id": os.getenv("USER_ID")}).execute()
+    
+    if result:
+        print(f"Inserted balance sheet data for {ticker} on {end_date}")
+    else:
+        print(f"Failed to insert balance sheet data for {ticker} on {end_date}")
+
+def save_historical_prices(data):
+    """Save historical prices to the database."""
+    ticker, date, open_price, high_price, low_price, close_price, volume, adjusted_close = data
+    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    result = supabase.table("historical_prices").insert(
+        {"ticker": ticker, "date": date, "open": open_price, "high": high_price, "low": low_price, "close": close_price, "volume": volume, "adjusted_close": adjusted_close, "user_id": os.getenv("USER_ID")}).execute()
+    
+    if result:
+        print(f"Inserted historical price data for {ticker} on {date}")
+    else:
+        print(f"Failed to insert historical price data for {ticker} on {date}")
 
 def fetch_balance_sheet_data(ticker):
     """Fetch balance sheet data and financial ratios for a given ticker from the database."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
+    data = supabase.table("balance_sheet").select(
+        "id, ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio"
+    ).eq("ticker", ticker).order("end_date", desc=True).execute()
 
-    # Query the balance sheet data for the given ticker
-    cursor.execute('''
-        SELECT end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio
-        FROM balance_sheet
-        WHERE ticker = ?
-        ORDER BY end_date DESC
-        LIMIT 1
-    ''', (ticker,))
-
-    row = cursor.fetchone()
-    conn.close()
-
-    if (row):
-        return {
-            'end_date': row[0],
-            'total_current_assets': row[1],
-            'total_current_liabilities': row[2],
-            'total_liabilities': row[3],
-            'total_stockholder_equity': row[4],
-            'current_ratio': row[5],
-            'debt_to_equity_ratio': row[6]
-        }
-    return None
-
-def save_historical_prices(ticker, historical_prices):
-    """Save historical prices to the database."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
-
-    # Create a table for historical prices if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS historical_prices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ticker TEXT NOT NULL,
-            date TEXT NOT NULL,
-            open REAL,
-            high REAL,
-            low REAL,
-            close REAL,
-            volume INTEGER,
-            adjusted_close REAL
-        )
-    ''')
-
-    # Insert historical prices into the table
-    for price in historical_prices:
-        cursor.execute('''
-            INSERT INTO historical_prices (ticker, date, open, high, low, close, volume, adjusted_close)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (ticker, price['date'], price['open'], price['high'], price['low'], price['close'], price['volume'], price['adjustedClose']))
-
-    conn.commit()
-    conn.close()
+    if data.status_code == 200 and data.data:
+        return data.data
+    else:
+        print(f"Failed to fetch balance sheet data for {ticker}: {data.error}")
+        return None
 
 def fetch_historical_prices(ticker):
     """Fetch historical prices for a given ticker from the database."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    cursor = conn.cursor()
+    data = supabase.table("historical_prices").select(
+        "id, ticker, date, open, high, low, close, volume, adjusted_close"
+    ).eq("ticker", ticker).order("date", desc=True).execute()
 
-    # Query the historical prices for the given ticker
-    cursor.execute('''
-        SELECT date, open, high, low, close, volume, adjusted_close
-        FROM historical_prices
-        WHERE ticker = ?
-        ORDER BY date DESC
-        LIMIT 5
-    ''', (ticker,))
+    if data.status_code == 200 and data.data:
+        return data.data
+    else:
+        print(f"Failed to fetch historical prices for {ticker}: {data.error}")
+        return None
 
-    rows = cursor.fetchall()
-    conn.close()
+def fetch_daily_analysis(ticker):
+    """Fetch daily analysis data for a given ticker from the database."""
+    data = supabase.table("daily_analysis").select(
+        "id, date, close_price, short_ma, long_ma, rsi, macd, signal_line"
+    ).eq("ticker", ticker).order("date", desc=True).execute()
 
-    if rows:
-        return [
-            {
-                'date': row[0],
-                'open': row[1],
-                'high': row[2],
-                'low': row[3],
-                'close': row[4],
-                'volume': row[5],
-                'adjusted_close': row[6]
-            }
-            for row in rows
-        ]
-    return None
+    if data.status_code == 200 and data.data:
+        return data.data
+    else:
+        print(f"Failed to fetch daily analysis data for {ticker}: {data.error}")
+        return None
 
-if __name__ == "__main__":
-    initialize_database()
+def fetch_yearly_analysis(ticker):
+    """Fetch yearly analysis data for a given ticker from the database."""
+    data = supabase.table("yearly_analysis").select(
+        "id, date, close_price, ticker"
+    ).eq("ticker", ticker).order("date", desc=True).execute()
+
+    if data.status_code == 200 and data.data:
+        return data.data
+    else:
+        print(f"Failed to fetch yearly analysis data for {ticker}: {data.error}")
+        return None
+
+def insert_asset_analysis(data):
+    """Insert analysis results into the asset_analysis table."""
+    ticker, forward_pe, profit_margins, beta, dividend_yield, peg_ratio = data
+    result = supabase.table("asset_analysis").insert({
+        "ticker": ticker,
+        "forward_pe": forward_pe,
+        "profit_margins": profit_margins,
+        "beta": beta,
+        "dividend_yield": dividend_yield,
+        "peg_ratio": peg_ratio,
+        "user_id": os.getenv("USER_ID")
+    }).execute()
+
+    if result:
+        print(f"Inserted asset analysis data for {ticker}.")
+    else:
+        print(f"Failed to insert asset analysis data for {ticker}")
+
+def fetch_asset_analysis(ticker):
+    """Fetch analysis results for a specific ticker from the asset_analysis table."""
+    result = supabase.table("asset_analysis").select(
+        "ticker, forward_pe, profit_margins, beta, dividend_yield, peg_ratio"
+    ).eq("ticker", ticker).order("analysis_date", desc=True).execute()
+
+    if result.status_code == 200 and result.data:
+        return result.data
+    else:
+        print(f"Failed to fetch asset analysis data for {ticker}: {result.error}")
+        return None
