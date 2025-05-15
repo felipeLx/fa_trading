@@ -1,7 +1,7 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
-from database import fetch_historical_prices, fetch_balance_sheet_data
+from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_daily_analysis, fetch_asset_analysis
+from robot import monitor_and_trade
 
 def authenticate_user(username, password):
     """Simple authentication function."""
@@ -11,14 +11,6 @@ def authenticate_user(username, password):
         "user": "userpass"
     }
     return valid_users.get(username) == password
-
-def fetch_table_data(table_name):
-    """Fetch all data from a given table in the database."""
-    conn = sqlite3.connect('/mnt/c/Users/USUARIO/Desktop/workspace/invest_fal/airflow/airflow.db')
-    query = f"SELECT * FROM {table_name}"
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-    return df
 
 def main():
     st.title("InvestFal Dashboard")
@@ -34,25 +26,35 @@ def main():
 
             # Navigation
             st.sidebar.title("Navigation")
-            page = st.sidebar.radio("Go to", ["Balance Sheet Data", "Historical Prices", "Charts"])
+            page = st.sidebar.radio("Go to", ["Balance Sheet Data", "Historical Prices", "Best Asset to Trade"])
 
             if page == "Balance Sheet Data":
                 st.header("Balance Sheet Data")
-                df = fetch_table_data("balance_sheet")
-                st.dataframe(df)
+                ticker = st.text_input("Enter Ticker:")
+                if ticker:
+                    df = fetch_balance_sheet_data(ticker)
+                    st.dataframe(df)
 
             elif page == "Historical Prices":
                 st.header("Historical Prices")
-                df = fetch_table_data("historical_prices")
-                st.dataframe(df)
+                ticker = st.text_input("Enter Ticker:")
+                if ticker:
+                    df = fetch_historical_prices(ticker)
+                    st.dataframe(df)
 
-            elif page == "Charts":
-                st.header("Charts")
-                df = fetch_table_data("historical_prices")
+            elif page == "Best Asset to Trade":
+                st.header("Best Asset to Trade")
+                st.write("Running the trading robot to determine the best asset...")
 
-                # Example: Plot average close price per ticker
-                avg_close = df.groupby("ticker")["close"].mean().reset_index()
-                st.bar_chart(avg_close.set_index("ticker"))
+                account_balance = 10000  # Example account balance in R$
+                risk_per_trade = 0.02  # Risk 2% of account balance per trade
+
+                # Call monitor_and_trade and capture the best asset
+                best_asset = monitor_and_trade(account_balance, risk_per_trade)
+                if best_asset:
+                    st.success(f"The best asset to trade is: {best_asset}")
+                else:
+                    st.error("No suitable asset found for trading.")
         else:
             st.sidebar.error("Invalid username or password")
 

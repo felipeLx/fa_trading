@@ -8,8 +8,8 @@ import os
 from dotenv import load_dotenv
 from strategy import calculate_moving_averages, calculate_rsi, calculate_macd, generate_signals
 from order_execution import place_order
-from database import initialize_database, insert_daily_analysis
-from technical_analysis import main as recommend_asset, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
+from database import fetch_daily_analysis, fetch_asset_analysis, fetch_historical_prices
+from technical_analysis import run_technical_analysis, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
 
 load_dotenv()
 
@@ -40,33 +40,72 @@ def fetch_realtime_data(ticker):
     data = yf.download(ticker, period="1d", interval="1m")
     return data
 
-def monitor_and_trade():
-    """Monitor and trade the recommended asset."""
-    # Step 1: Get the recommended asset from technical_analysis
-    print("Fetching recommended asset...")
-    recommended_asset, historical_prices = recommend_asset()  # Assuming `main` now returns the best asset and historical prices
+def monitor_and_trade(account_balance, risk_per_trade):
+    """Monitor and analyze the recommended asset."""
+    print("Running technical analysis...")
+    run_technical_analysis()
 
-    if not recommended_asset or not historical_prices:
-        print("No recommended asset or historical data found. Exiting.")
+    print("Fetching data for analysis...")
+
+    # Fetch data from the database
+    tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
+    best_asset = None
+    best_score = float('-inf')
+
+    for ticker in tickers:
+        print(f"Analyzing data for {ticker}...")
+
+        # Fetch daily analysis and asset analysis data
+        daily_analysis = fetch_daily_analysis(ticker)
+        asset_analysis = fetch_asset_analysis(ticker)
+        historical_prices = fetch_historical_prices(ticker)
+
+        if not daily_analysis or not asset_analysis or not historical_prices:
+            print(f"Insufficient data for {ticker}. Skipping...")
+            continue
+
+        # Example scoring logic based on RSI and beta
+        rsi = daily_analysis[0].get('rsi')  # Most recent RSI
+        beta = asset_analysis[0].get('beta')
+
+        if rsi is None or beta is None:
+            print(f"Missing RSI or beta for {ticker}. Skipping...")
+            continue
+
+        # Favor assets with RSI between 30 and 70 and low beta
+        score = 0
+        if 30 <= rsi <= 70:
+            score += 10
+        if beta < 1:
+            score += 5
+
+        print(f"Score for {ticker}: {score}")
+
+        if score > best_score:
+            best_score = score
+            best_asset = ticker
+
+    if not best_asset:
+        print("No suitable asset found for trading today.")
         return
 
-    print(f"Recommended asset for trading: {recommended_asset}")
+    print(f"Best asset for trading: {best_asset}")
 
-    # Calculate stop-loss and take-profit levels using historical prices
+    # Fetch historical prices for the best asset
+    historical_prices = fetch_historical_prices(best_asset)
     stop_loss, take_profit = calculate_stop_loss_take_profit_levels(historical_prices)
     print(f"Stop-loss: {stop_loss}, Take-profit: {take_profit}")
 
-    # Step 2: Monitor the recommended asset in real-time
+    # Monitor the best asset in real-time
     while True:
-        print(f"Fetching real-time data for {recommended_asset}...")
-        data = fetch_realtime_data(recommended_asset)
+        print(f"Fetching real-time data for {best_asset}...")
+        data = fetch_realtime_data(best_asset)
 
         if data.empty:
-            print(f"No data found for {recommended_asset}. Retrying...")
+            print(f"No data found for {best_asset}. Retrying...")
             time.sleep(300)  # Wait 5 minutes before retrying
             continue
 
-        # Step 3: Apply strategy and risk management
         print("Calculating indicators...")
         data = calculate_moving_averages(data)
         data = calculate_rsi(data)
@@ -80,16 +119,14 @@ def monitor_and_trade():
 
         if signal == 1:  # Buy signal
             print("Buy signal detected. Calculating position size...")
-            position_size = calculate_position_size(account_balance, risk_per_trade, stop_loss)
-            place_order(api_key="your_api_key_here", ticker=recommended_asset, action="buy", quantity=position_size)
+            position_size = calculate_position_size(account_balance, risk_per_trade, stop_loss, current_price)
+            place_order(api_key="your_api_key_here", ticker=best_asset, action="buy", quantity=position_size)
             apply_stop_loss_take_profit(current_price, stop_loss, take_profit)
-            insert_daily_analysis(recommended_asset, "buy", position_size, current_price, stop_loss, take_profit)
-            send_email("Trade Executed", f"Bought {position_size} of {recommended_asset} at {current_price}")
+            send_email("Trade Executed", f"Bought {position_size} of {best_asset} at {current_price}")
         elif signal == -1:  # Sell signal
             print("Sell signal detected. Executing sell order...")
-            place_order(api_key="your_api_key_here", ticker=recommended_asset, action="sell", quantity=10)  # Example quantity
-            insert_daily_analysis(recommended_asset, "sell", 10, current_price, stop_loss, take_profit)
-            send_email("Trade Executed", f"Sold {recommended_asset} at {current_price}")
+            place_order(api_key="your_api_key_here", ticker=best_asset, action="sell", quantity=10)  # Example quantity
+            send_email("Trade Executed", f"Sold {best_asset} at {current_price}")
 
         print("Waiting for the next check...")
         time.sleep(300)  # Wait 5 minutes before the next check
@@ -100,11 +137,3 @@ def balance_and_risk_management():
     risk_per_trade = 0.02  # Risk 2% of account balance per trade
 
     return account_balance, risk_per_trade
-if __name__ == "__main__":
-    account_balance, risk_per_trade = balance_and_risk_management()
-
-    # Initialize the database to ensure tables exist
-    initialize_database()
-
-    # Start monitoring and trading
-    monitor_and_trade()

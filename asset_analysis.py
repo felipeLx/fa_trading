@@ -16,6 +16,8 @@ def analyze_profit_margins(profit_margins):
 
 def evaluate_beta(beta):
     """Evaluate the risk based on beta."""
+    if beta is None:
+        return "Unknown Risk"
     if beta < 1:
         return "Low Risk"
     elif beta > 1.5:
@@ -30,6 +32,8 @@ def calculate_dividend_yield(last_dividend_value, current_price):
 
 def analyze_peg_ratio(peg_ratio):
     """Analyze the PEG ratio."""
+    if peg_ratio is None:
+        return "Unknown PEG Ratio"
     if peg_ratio < 1:
         return "Undervalued Growth"
     elif peg_ratio > 2:
@@ -47,15 +51,3 @@ def analyze_asset(default_key_statistics, current_price):
     }
     return analysis
 
-if __name__ == "__main__":
-    # Example usage
-    example_data = {
-        "forwardPE": 4.3977556,
-        "profitMargins": 0.25527,
-        "beta": 1.088,
-        "lastDividendValue": 1.345348,
-        "pegRatio": -0.6
-    }
-    current_price = 35.0  # Example current price
-    result = analyze_asset(example_data, current_price)
-    print(result)

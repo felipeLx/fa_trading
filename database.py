@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from datetime import datetime, timezone
+import numpy as np
 
 # Load environment variables
 load_dotenv()
@@ -12,12 +13,34 @@ SUPABASE_KEY = os.getenv("DATABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+def safe_check_nan(value):
+    """Check if a value is NaN, safely handling non-numeric types."""
+    if isinstance(value, (int, float, np.float64)):
+        return np.isnan(value)
+    return False
+
 def insert_daily_analysis(data):
     """Insert data into the daily_analysis table."""
     date, close_price, short_ma, long_ma, rsi, macd, signal_line, ticker = data
-    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    date = datetime.fromtimestamp(date, tz=timezone.utc).strftime('%Y-%m-%d')
+
+    close_price = None if safe_check_nan(close_price) else close_price
+    short_ma = None if safe_check_nan(short_ma) else short_ma
+    long_ma = None if safe_check_nan(long_ma) else long_ma
+    rsi = None if safe_check_nan(rsi) else rsi
+    macd = None if safe_check_nan(macd) else macd
+    signal_line = None if safe_check_nan(signal_line) else signal_line
+
     result = supabase.table("daily_analysis").insert(
-        {"date": date, "close_price": close_price, "short_ma": short_ma, "long_ma": long_ma, "rsi": rsi, "macd": macd, "signal_line": signal_line, "ticker": ticker, "user_id": os.getenv("USER_ID")}).execute()
+        {"date": date, 
+         "close_price": close_price, 
+         "short_ma": short_ma, 
+         "long_ma": long_ma, 
+         "rsi": rsi, 
+         "macd": macd, 
+         "signal_line": signal_line, 
+         "ticker": ticker, 
+         "user_id": os.getenv("USER_ID")}).execute()
     
     if result:
         print(f"Inserted daily analysis data for {date}")
@@ -27,7 +50,7 @@ def insert_daily_analysis(data):
 def insert_yearly_analysis(data):
     """Insert data into the yearly_analysis table."""
     date, close_price, ticker = data
-    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    date = datetime.fromtimestamp(date, tz=timezone.utc).strftime('%Y-%m-%d')
     result = supabase.table("yearly_analysis").insert(
         {"date": date, "close_price": close_price, "ticker": ticker, "user_id": os.getenv("USER_ID")}).execute()
     
@@ -52,7 +75,7 @@ def save_balance_sheet_data(data):
 def save_historical_prices(data):
     """Save historical prices to the database."""
     ticker, date, open_price, high_price, low_price, close_price, volume, adjusted_close = data
-    date = datetime.fromtimestamp(int(date), tz=timezone.utc).strftime('%Y-%m-%d')
+    date = datetime.fromtimestamp(date, tz=timezone.utc).strftime('%Y-%m-%d')
     result = supabase.table("historical_prices").insert(
         {"ticker": ticker, "date": date, "open": open_price, "high": high_price, "low": low_price, "close": close_price, "volume": volume, "adjusted_close": adjusted_close, "user_id": os.getenv("USER_ID")}).execute()
     

@@ -45,7 +45,7 @@ def fetch_market_and_balance_sheet_data(ticker):
         'interval': '90m',
         'fundamental': 'true',
         'dividends': 'true',
-        'modules': 'balanceSheetHistory',
+        'modules': ['balanceSheetHistory', 'defaultKeyStatistics'],
         'token': token,
     }
 
@@ -239,7 +239,7 @@ def calculate_macd(prices, short_period=12, long_period=26, signal_period=9):
 
     return macd, signal_line
 
-def main():
+def run_technical_analysis():
     tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
 
     all_features = []
@@ -299,14 +299,14 @@ def main():
                     signal_line = signal_line_values[i] if i < len(signal_line_values) else None
 
                     insert_daily_analysis((
-                        ticker,
                         price['date'],
                         price['close'],
                         short_ma,
                         long_ma,
                         rsi,
                         macd,
-                        signal_line
+                        signal_line,
+                        ticker
                     ))
 
                 print(f"Saving yearly analysis for {ticker} to the database...")
@@ -337,6 +337,3 @@ def main():
 
     print("Predicting the best asset for day trading...")
     predict_best_asset(model, all_features, tickers)
-
-if __name__ == "__main__":
-    main()
