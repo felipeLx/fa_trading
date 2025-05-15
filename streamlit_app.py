@@ -4,16 +4,38 @@ from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_as
 from robot import monitor_and_trade
 from technical_analysis import run_technical_analysis
 
-def main():
-    st.title("InvestFal Dashboard")
+# Function to check login state
+def is_logged_in():
+    return st.session_state.get("user_info") is not None
 
-    # Google OAuth Login
+# Function to log in with Google
+def login_with_google():
     if not st.user.is_logged_in:
         st.button("Log in with Google", on_click=st.login)
         st.stop()
 
     st.button("Log out", on_click=st.logout)
     st.markdown(f"Welcome! {st.user.name}")
+
+# Function to log out
+def logout():
+    st.session_state["user_info"] = None
+
+def main():
+    st.title("InvestFal Dashboard")
+
+    # Google OAuth Login
+    if not is_logged_in():
+        if st.button("Log in with Google"):
+            login_with_google()
+        st.stop()
+
+    if st.button("Log out"):
+        logout()
+        st.experimental_rerun()
+
+    user_info = st.session_state["user_info"]
+    st.markdown(f"Welcome! {user_info['name']}")
 
     # Navigation
     st.sidebar.title("Navigation")
@@ -23,7 +45,7 @@ def main():
         st.header("Asset Overview")
 
         # Select ticker
-        tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3"]
+        tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
         selected_ticker = st.selectbox("Select Ticker:", tickers, index=0)
 
         # Fetch and display data
