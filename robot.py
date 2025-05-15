@@ -7,7 +7,7 @@ import time
 import os
 from dotenv import load_dotenv
 from strategy import calculate_moving_averages, calculate_rsi, calculate_macd, generate_signals
-from order_execution import place_order
+#from order_execution import place_order
 from database import fetch_daily_analysis, fetch_asset_analysis, fetch_historical_prices
 from technical_analysis import run_technical_analysis, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
 
@@ -120,12 +120,12 @@ def monitor_and_trade(account_balance, risk_per_trade):
         if signal == 1:  # Buy signal
             print("Buy signal detected. Calculating position size...")
             position_size = calculate_position_size(account_balance, risk_per_trade, stop_loss, current_price)
-            place_order(api_key="your_api_key_here", ticker=best_asset, action="buy", quantity=position_size)
+            #place_order(api_key="your_api_key_here", ticker=best_asset, action="buy", quantity=position_size)
             apply_stop_loss_take_profit(current_price, stop_loss, take_profit)
             send_email("Trade Executed", f"Bought {position_size} of {best_asset} at {current_price}")
         elif signal == -1:  # Sell signal
             print("Sell signal detected. Executing sell order...")
-            place_order(api_key="your_api_key_here", ticker=best_asset, action="sell", quantity=10)  # Example quantity
+            #place_order(api_key="your_api_key_here", ticker=best_asset, action="sell", quantity=10)  # Example quantity
             send_email("Trade Executed", f"Sold {best_asset} at {current_price}")
 
         print("Waiting for the next check...")

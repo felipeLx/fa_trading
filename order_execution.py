@@ -1,11 +1,13 @@
+"""
+
 import requests
 import sqlite3
 from strategy import calculate_position_size
-from technical_analysis import technical_analysis_main
+from technical_analysis import run_technical_analysis
 
 def place_order(api_key, ticker, action, quantity):
-    """Place a buy or sell order using a broker's API."""
-    # Example API endpoint and payload (replace with actual broker's API details)
+    #Place a buy or sell order using a broker's API.
+    
     api_url = "https://api.broker.com/orders"
     payload = {
         "ticker": ticker,
@@ -27,8 +29,7 @@ def place_order(api_key, ticker, action, quantity):
         print(f"Error placing order: {e}")
 
 def execute_order_based_on_analysis(account_balance, risk_per_trade):
-    """Execute buy or sell orders based on technical analysis results."""
-    # Run the technical analysis to determine the best asset
+    #Execute buy or sell orders based on technical analysis results.
     print("Running technical analysis to determine the best asset...")
     technical_analysis_main()
 
@@ -60,3 +61,4 @@ if __name__ == "__main__":
     account_balance = 10000  # Example account balance in R$
     risk_per_trade = 0.02  # Risk 2% of account balance per trade
     execute_order_based_on_analysis(account_balance, risk_per_trade)
+"""
