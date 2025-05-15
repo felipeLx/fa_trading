@@ -9,30 +9,22 @@ def is_logged_in():
     return st.session_state.get("user_info") is not None
 
 # Function to log in with Google
-def login_with_google():
-    if not st.user.is_logged_in:
-        st.button("Log in with Google", on_click=st.login)
-        st.stop()
+def login_screen():
+    st.header("This app is private.")
+    st.subheader("Please log in.")
+    st.button("Log in with Google", on_click=st.login)
 
-    st.button("Log out", on_click=st.logout)
-    st.markdown(f"Welcome! {st.user.name}")
-
-# Function to log out
-def logout():
-    st.session_state["user_info"] = None
 
 def main():
     st.title("InvestFal Dashboard")
 
     # Google OAuth Login
-    if not is_logged_in():
-        if st.button("Log in with Google"):
-            login_with_google()
-        st.stop()
-
-    if st.button("Log out"):
-        logout()
-        st.experimental_rerun()
+    # Function to log out
+    if not st.user.is_logged_in:
+        login_screen()
+    else:
+        st.header(f"Welcome, {st.user.name}!")
+        st.button("Log out", on_click=st.logout)
 
     user_info = st.session_state["user_info"]
     st.markdown(f"Welcome! {user_info['name']}")
