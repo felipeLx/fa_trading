@@ -1,7 +1,7 @@
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
-from database import initialize_database, insert_daily_analysis, fetch_historical_prices
+from database import insert_daily_analysis, fetch_historical_prices
 import time
 import csv
 

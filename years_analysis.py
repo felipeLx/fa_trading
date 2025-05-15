@@ -1,7 +1,7 @@
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
-from database import initialize_database, insert_yearly_analysis
+from database import insert_yearly_analysis
 import time
 
 max_retries = 5

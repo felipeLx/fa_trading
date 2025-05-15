@@ -1,7 +1,7 @@
 import requests
 import sqlite3
 from strategy import calculate_position_size
-from technical_analysis import main as technical_analysis_main
+from technical_analysis import technical_analysis_main
 
 def place_order(api_key, ticker, action, quantity):
     """Place a buy or sell order using a broker's API."""
