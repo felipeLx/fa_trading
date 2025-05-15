@@ -20,7 +20,7 @@ def main():
 
     # Google OAuth Login
     # Function to log out
-    if not st.user.is_logged_in:
+    if not st.user:
         login_screen()
     else:
         st.header(f"Welcome, {st.user.name}!")
