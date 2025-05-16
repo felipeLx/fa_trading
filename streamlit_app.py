@@ -26,7 +26,7 @@ def login():
             }
         },
         scopes=SCOPES,
-        redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
+        redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/oauth2callback"
     )
     auth_url, _ = flow.authorization_url(prompt='consent')
     st.session_state['flow'] = flow
