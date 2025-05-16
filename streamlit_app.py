@@ -27,7 +27,7 @@ def login():
             }
         },
         scopes=SCOPES,
-        cache=pickle.load(open("token.pkl", "rb")) if os.path.exists("token.pkl") else None
+        cache=pickle.load(open("token.pkl", "rb")) if os.path.exists("token.pkl") else None,
         redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
     )
     auth_url, _ = flow.authorization_url(prompt='consent')
