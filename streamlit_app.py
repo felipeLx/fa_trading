@@ -58,13 +58,13 @@ def main():
         st.image(user_info["picture"])
         if st.button("Logout"):
             logout()
-            st.experimental_rerun()
+            st.rerun()
         # ... your dashboard code here ...
     else:
         # Not logged in
         if st.button("Login with Google"):
             login()
-            st.experimental_rerun()
+            st.rerun()
         if st.session_state.get('login_requested'):
             st.markdown(f"[Click here to authenticate]({st.session_state['auth_url']})")
 
