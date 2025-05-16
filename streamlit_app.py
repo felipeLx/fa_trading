@@ -11,7 +11,9 @@ def main():
 
     user = getattr(st, "user", None)
     is_logged_in = getattr(user, "is_logged_in", False) if user else False
-
+    st.title("User Test")
+    st.write("st.user:", getattr(st, "user", None))
+    st.write("dir(st):", dir(st))
     if not is_logged_in:
         st.warning(
             "Please log in with Google to access the dashboard. "
