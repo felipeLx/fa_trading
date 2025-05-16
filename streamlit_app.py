@@ -1,33 +1,66 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
 from robot import monitor_and_trade
 from technical_analysis import run_technical_analysis
+from google.auth.transport import requests
+from google.oauth2 import id_token
+from google_auth_oauthlib import get_user_credentials
+import os
+from dotenv import load_dotenv
 
-# Function to check login state
-def is_logged_in():
-    return st.session_state.get("user_info") is not None
+load_dotenv()
 
-# Function to log in with Google
-def login_screen():
-    st.header("This app is private.")
-    st.subheader("Please log in.")
-    st.button("Log in with Google", on_click=st.login)
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "credentials" not in st.session_state:
+    st.session_state.credentials = None
 
+
+def login_callback():
+    credentials = get_user_credentials(
+        scopes=[
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/calendar.events.readonly",
+        ],
+        client_id=os.getenv("CLIENT_ID"),
+        client_secret=os.getenv("CLIENT_SECRET"),
+    )
+    id_info = id_token.verify_token(
+        credentials.id_token,
+        requests.Request(),
+    )
+    st.session_state.credentials = credentials
+    st.session_state.user = id_info
+
+
+if not st.session_state.user:
+    st.button(
+        "🔑 Login with Google",
+        type="primary",
+        on_click=login_callback,
+    )
+    st.stop()
+
+if st.sidebar.button("Logout", type="primary"):
+    st.session_state["user"] = None
+    st.session_state["credentials"] = None
+    st.rerun()
+
+st.header(f"Hello {st.session_state.user['given_name']}")
+st.image(st.session_state.user["picture"])
+
+with st.sidebar:
+    st.subheader("User info")
+    st.json(st.session_state.user)
+
+st.divider()
 
 def main():
     st.title("InvestFal Dashboard")
-
-    # Google OAuth Login
-    # Function to log out
-    if not st.user:
-        login_screen()
-    else:
-        st.header(f"Welcome, {st.user.name}!")
-        st.button("Log out", on_click=st.logout)
-
-    user_info = st.session_state["user_info"]
-    st.markdown(f"Welcome! {user_info['name']}")
 
     # Navigation
     st.sidebar.title("Navigation")
