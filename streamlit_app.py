@@ -15,19 +15,17 @@ SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://w
 
 
 def login():
-    flow = Flow.from_client_secrets_file(
+    flow = Flow.from_client_config(
         {
-        "installed": {
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "auth_uri":"https://accounts.google.com/o/oauth2/auth",
-            "token_uri":"https://oauth2.googleapis.com/token",
-            "redirect_uris":["https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"],  
-            "redirect_uri":"https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
+            "installed": {
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": ["https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"],
             }
         },
         scopes=SCOPES,
-        cache=pickle.load(open("token.pkl", "rb")) if os.path.exists("token.pkl") else None,
         redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
     )
     auth_url, _ = flow.authorization_url(prompt='consent')
