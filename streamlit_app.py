@@ -7,10 +7,6 @@ from technical_analysis import run_technical_analysis
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from google_auth_oauthlib import get_user_credentials
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -24,10 +20,11 @@ def login_callback():
             "openid",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/calendar.events.readonly",
         ],
-        client_id=os.getenv("CLIENT_ID"),
-        client_secret=os.getenv("CLIENT_SECRET"),
+        client_id=st.secrets.CLIENT_ID,
+        client_secret=st.secrets.CLIENT_SECRET,
+        minimum_port=8000,
+        maximum_port=9000,
     )
     id_info = id_token.verify_token(
         credentials.id_token,
