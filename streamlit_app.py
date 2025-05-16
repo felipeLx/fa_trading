@@ -4,11 +4,10 @@ from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_as
 from robot import monitor_and_trade
 from technical_analysis import run_technical_analysis
 
-# --- Google Auth via Streamlit Cloud ---
-
 def main():
     st.title("InvestFal Dashboard")
-
+    st.write(st.session_state)
+    st.write(st.experimental_get_query_params())
     user = getattr(st, "user", None)
     is_logged_in = getattr(user, "is_logged_in", False) if user else False
     st.title("User Test")
