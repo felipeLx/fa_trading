@@ -4,12 +4,12 @@ from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_as
 from robot import monitor_and_trade
 from technical_analysis import run_technical_analysis
 import os
-import pickle
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+
+CLIENT_ID = st.secrets("CLIENT_ID")
+CLIENT_SECRET = st.secrets("CLIENT_SECRET")
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 

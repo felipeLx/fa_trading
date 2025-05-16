@@ -130,6 +130,7 @@ def monitor_and_trade(account_balance, risk_per_trade):
 
         print("Waiting for the next check...")
         time.sleep(300)  # Wait 5 minutes before the next check
+    
 
 def balance_and_risk_management():
     """Check account balance and apply risk management."""
