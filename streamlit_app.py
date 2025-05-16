@@ -3,31 +3,73 @@ import pandas as pd
 from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
 from robot import monitor_and_trade
 from technical_analysis import run_technical_analysis
+import os
+import pickle
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+
+CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
+CLIENT_SECRETS_FILE = "client_secret.json"
+SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
+
+
+def login():
+    flow = Flow.from_client_secrets_file(
+        {
+        "installed": {
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "auth_uri":"https://accounts.google.com/o/oauth2/auth",
+            "token_uri":"https://oauth2.googleapis.com/token",
+            "redirect_uris":["https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"],  
+            "redirect_uri":"https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
+            }
+        },
+        scopes=SCOPES,
+        cache=pickle.load(open("token.pkl", "rb")) if os.path.exists("token.pkl") else None
+        redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
+    )
+    auth_url, _ = flow.authorization_url(prompt='consent')
+    st.session_state['flow'] = flow
+    st.session_state['auth_url'] = auth_url
+    st.session_state['login_requested'] = True
+
+def logout():
+    st.session_state.clear()
 
 def main():
     st.title("InvestFal Dashboard")
-    st.write(st.session_state)
-    st.write(st.experimental_get_query_params())
-    user = getattr(st, "user", None)
-    is_logged_in = getattr(user, "is_logged_in", False) if user else False
-    st.title("User Test")
-    st.write("st.user:", getattr(st, "user", None))
-    st.write("dir(st):", dir(st))
-    if not is_logged_in:
-        st.warning(
-            "Please log in with Google to access the dashboard. "
-            "If you are running locally, authentication is only available on Streamlit Community Cloud."
-        )
-        st.stop()
+    # Handle OAuth callback
+    if "code=" in st.experimental_get_query_params().get("code", [""])[0]:
+        code = st.experimental_get_query_params()["code"][0]
+        flow = st.session_state.get('flow')
+        if flow:
+            flow.fetch_token(code=code)
+            credentials = flow.credentials
+            st.session_state['credentials'] = credentials
+            st.session_state['login_requested'] = False
 
-    if is_logged_in:
-        st.header(f"Hello {user.name}")
-        if hasattr(user, "picture"):
-            st.image(user.picture)
-        st.sidebar.subheader("User info")
-        st.sidebar.json({k: v for k, v in user.__dict__.items() if not k.startswith('_')})
-        st.divider()
+    # If logged in, show user info and logout
+    if 'credentials' in st.session_state:
+        credentials = st.session_state['credentials']
+        service = build('oauth2', 'v2', credentials=credentials)
+        user_info = service.userinfo().get().execute()
+        st.write("Logged in as:", user_info["email"])
+        st.image(user_info["picture"])
+        if st.button("Logout"):
+            logout()
+            st.experimental_rerun()
+        # ... your dashboard code here ...
+    else:
+        # Not logged in
+        if st.button("Login with Google"):
+            login()
+            st.experimental_rerun()
+        if st.session_state.get('login_requested'):
+            st.markdown(f"[Click here to authenticate]({st.session_state['auth_url']})")
 
+    if user_info:
         # Navigation
         st.sidebar.title("Navigation")
         page = st.sidebar.radio("Go to", ["Asset Overview", "Best Asset to Trade", "Run Robot"])
