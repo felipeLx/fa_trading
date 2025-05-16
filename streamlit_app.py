@@ -9,16 +9,21 @@ from technical_analysis import run_technical_analysis
 def main():
     st.title("InvestFal Dashboard")
 
-    # Use Streamlit's built-in Google authentication
-    if not hasattr(st, "user") or not st.user.is_logged_in:
-        st.warning("Please log in with Google to access the dashboard.")
+    user = getattr(st, "user", None)
+    is_logged_in = getattr(user, "is_logged_in", False) if user else False
+
+    if not is_logged_in:
+        st.warning(
+            "Please log in with Google to access the dashboard. "
+            "If you are running locally, authentication is only available on Streamlit Community Cloud."
+        )
         st.stop()
 
-    st.header(f"Hello {st.user.name}")
-    if hasattr(st.user, "picture"):
-        st.image(st.user.picture)
+    st.header(f"Hello {user.name}")
+    if hasattr(user, "picture"):
+        st.image(user.picture)
     st.sidebar.subheader("User info")
-    st.sidebar.json({k: v for k, v in st.user.__dict__.items() if not k.startswith('_')})
+    st.sidebar.json({k: v for k, v in user.__dict__.items() if not k.startswith('_')})
     st.divider()
 
     # Navigation
