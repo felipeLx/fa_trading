@@ -1,7 +1,7 @@
 from datetime import datetime
 import yfinance as yf
 import pandas as pd
-from database import insert_daily_analysis, insert_yearly_analysis, save_balance_sheet_data, save_historical_prices, insert_asset_analysis
+from utils.database import insert_daily_analysis, insert_yearly_analysis, save_balance_sheet_data, save_historical_prices, insert_asset_analysis
 import time
 import requests
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 import joblib
-from asset_analysis import analyze_asset
+from utils.asset_analysis import analyze_asset
 import numpy as np
 
 load_dotenv()

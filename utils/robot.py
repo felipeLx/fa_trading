@@ -4,9 +4,9 @@ from email.mime.multipart import MIMEMultipart
 import time
 import os
 from dotenv import load_dotenv
-from strategy import calculate_moving_averages, calculate_rsi, calculate_macd, generate_signals
-from database import fetch_daily_analysis, fetch_asset_analysis, fetch_historical_prices
-from technical_analysis import run_technical_analysis, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
+from utils.strategy import calculate_moving_averages, calculate_rsi, calculate_macd, generate_signals
+from utils.database import fetch_daily_analysis, fetch_asset_analysis, fetch_historical_prices
+from utils.technical_analysis import run_technical_analysis, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
 
 load_dotenv()
 
