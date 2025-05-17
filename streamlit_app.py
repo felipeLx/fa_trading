@@ -48,6 +48,7 @@ def main():
             credentials = flow.credentials
             st.session_state['credentials'] = credentials
             st.session_state['login_requested'] = False
+            st.experimental_set_query_params()  # Clean up URL after login
 
     # If logged in, show user info and logout
     if 'credentials' in st.session_state:
@@ -61,17 +62,14 @@ def main():
             st.rerun()
         # ... your dashboard code here ...
     else:
-        # Not logged in
-        if st.button("Login with Google"):
+        # Not logged in: show only the Authenticate with Google button
+        if 'flow' not in st.session_state or 'auth_url' not in st.session_state:
+            # Create the flow and auth_url on first load
             login()
-            st.session_state['show_auth_link'] = True
-            st.rerun()
-
-        if st.session_state.get('show_auth_link') and st.session_state.get('auth_url'):
-            st.markdown(
-                f'<a href="{st.session_state["auth_url"]}" target="_self" style="display:inline-block; padding:0.5em 1em; background:#4285F4; color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Authenticate with Google</a>',
-                unsafe_allow_html=True
-            )
+        st.markdown(
+            f'<a href="{st.session_state["auth_url"]}" style="display:inline-block; padding:0.5em 1em; background:#4285F4; color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Authenticate with Google</a>',
+            unsafe_allow_html=True
+        )
 
     if 'credentials' in st.session_state:
         # Navigation
