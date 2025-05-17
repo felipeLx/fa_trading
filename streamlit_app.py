@@ -8,8 +8,8 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
 
-CLIENT_ID = st.secrets("CLIENT_ID")
-CLIENT_SECRET = st.secrets("CLIENT_SECRET")
+CLIENT_ID = st.secrets["CLIENT_ID"]
+CLIENT_SECRET = st.secrets["CLIENT_SECRET"]
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
