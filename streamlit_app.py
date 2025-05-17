@@ -10,7 +10,6 @@ from googleapiclient.discovery import build
 
 CLIENT_ID = st.secrets["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["CLIENT_SECRET"]
-CLIENT_SECRETS_FILE = "client_secret.json"
 REDIRECT_URI = "https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/oauth2callback"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
