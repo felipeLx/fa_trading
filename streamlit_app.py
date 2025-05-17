@@ -11,6 +11,7 @@ from googleapiclient.discovery import build
 CLIENT_ID = st.secrets["CLIENT_ID"]
 CLIENT_SECRET = st.secrets["CLIENT_SECRET"]
 CLIENT_SECRETS_FILE = "client_secret.json"
+REDIRECT_URI = "https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/oauth2callback"
 SCOPES = ["openid", "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"]
 
 
@@ -22,11 +23,11 @@ def login():
                 "client_secret": CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": ["https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"],
+                "redirect_uris": [REDIRECT_URI],
             }
         },
         scopes=SCOPES,
-        redirect_uri="https://fatrading-7gfnxhrmeoknbjri7zanvg.streamlit.app/"
+        redirect_uri=REDIRECT_URI
     )
     auth_url, _ = flow.authorization_url(prompt='consent')
     st.session_state['flow'] = flow
