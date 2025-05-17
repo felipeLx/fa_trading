@@ -15,10 +15,6 @@ import numpy as np
 
 load_dotenv()
 
-max_retries = 5
-retry_delay = 10  # seconds
-initial_delay = 5  # seconds
-
 def calculate_moving_averages(data, short_window=20, long_window=50):
     """Calculate short and long moving averages."""
     data['Short_MA'] = data['Close'].rolling(window=short_window).mean()
@@ -32,36 +28,30 @@ def identify_signals(data):
     data.loc[data['Short_MA'] <= data['Long_MA'], 'Signal'] = -1  # Sell signal
     return data
 
-def fetch_market_and_balance_sheet_data(ticker):
-    """Fetch market and balance sheet data for a given ticker."""
+def fetch_brapi_data(ticker, interval='1mo', range_='1mo'):
+    """Fetch all relevant data (market, balance sheet, historical, intraday) for a ticker from BRAPI in a single call."""
     token = os.getenv('BRAPI_API_KEY')
     if not token:
         print("Error: BRAPI_API_KEY is not set in the environment variables.")
         return None
-
     url = f"https://brapi.dev/api/quote/{ticker}"
     params = {
-        'range': '1mo',
-        'interval': '90m',
+        'range': range_,
+        'interval': interval,
         'fundamental': 'true',
         'dividends': 'true',
         'modules': ['balanceSheetHistory', 'defaultKeyStatistics'],
         'token': token,
     }
-
     try:
         response = requests.get(url, params=params)
-        print(f"Requesting URL: {response.url}")  # Print the full URL with parameters
-        print(f"Response Status Code: {response.status_code}")
-        print(response.text)  # Print the response text for debugging
         if response.status_code == 200:
-            data = response.json()
-            return data
+            return response.json()
         else:
-            print(f"Request failed with status code {response.status_code}")
+            print(f"Failed to fetch data for {ticker}: {response.status_code}")
             return None
-    except requests.exceptions.RequestException as e:
-        print(f"An error occurred while fetching data for {ticker}: {e}")
+    except Exception as e:
+        print(f"Error fetching data for {ticker}: {e}")
         return None
 
 def process_market_and_balance_sheet_data(data):
@@ -207,14 +197,6 @@ def save_financial_data_to_db(ticker, balance_sheet_info, financial_ratios):
     except Exception as e:
         print(f"Failed to save financial data for {ticker}: {e}")
 
-def save_historical_prices_to_db(ticker, historical_prices):
-    """Save historical prices to the database."""
-    try:
-        save_historical_prices(ticker, historical_prices)
-        print(f"Saved historical prices for {ticker} to the database.")
-    except Exception as e:
-        print(f"Failed to save historical prices for {ticker}: {e}")
-
 def calculate_rsi(prices, period=14):
     """Calculate the Relative Strength Index (RSI)."""
     deltas = np.diff(prices)
@@ -246,8 +228,8 @@ def run_technical_analysis():
     all_labels = []
 
     for ticker in tickers:
-        print(f"Fetching market and balance sheet data for {ticker}...")
-        market_data = fetch_market_and_balance_sheet_data(ticker)
+        print(f"Fetching all BRAPI data for {ticker}...")
+        market_data = fetch_brapi_data(ticker, interval='1d,5m', range_='5d')
 
         if market_data:
             print(f"Processing data for {ticker}...")

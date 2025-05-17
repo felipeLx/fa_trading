@@ -1,13 +1,10 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import yfinance as yf
-from datetime import datetime
 import time
 import os
 from dotenv import load_dotenv
 from strategy import calculate_moving_averages, calculate_rsi, calculate_macd, generate_signals
-#from order_execution import place_order
 from database import fetch_daily_analysis, fetch_asset_analysis, fetch_historical_prices
 from technical_analysis import run_technical_analysis, calculate_stop_loss_take_profit_levels, calculate_position_size, apply_stop_loss_take_profit
 
@@ -36,9 +33,23 @@ def send_email(subject, body):
         print(f"Failed to send email: {e}")
 
 def fetch_realtime_data(ticker):
-    """Fetch real-time data for a given ticker."""
-    data = yf.download(ticker, period="1d", interval="1m")
-    return data
+    """Fetch the most recent price and related info for a given ticker from the database (as a real-time proxy)."""
+    prices = fetch_historical_prices(ticker)
+    if not prices:
+        print(f"No historical price data found for {ticker}.")
+        return None
+    latest = prices[0]  # Most recent due to order(desc=True) in fetch_historical_prices
+    # Map to expected keys for trading logic
+    return {
+        'symbol': latest.get('ticker'),
+        'regularMarketPrice': latest.get('close'),
+        'regularMarketDayHigh': latest.get('high'),
+        'regularMarketDayLow': latest.get('low'),
+        'regularMarketOpen': latest.get('open'),
+        'regularMarketVolume': latest.get('volume'),
+        'date': latest.get('date'),
+        # Add more fields if needed for your logic
+    }
 
 def monitor_and_trade(account_balance, risk_per_trade):
     """Monitor and analyze the recommended asset."""
@@ -101,7 +112,7 @@ def monitor_and_trade(account_balance, risk_per_trade):
         print(f"Fetching real-time data for {best_asset}...")
         data = fetch_realtime_data(best_asset)
 
-        if data.empty:
+        if data is None:
             print(f"No data found for {best_asset}. Retrying...")
             time.sleep(300)  # Wait 5 minutes before retrying
             continue
