@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-from database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
-from robot import monitor_and_trade
-from technical_analysis import run_technical_analysis
+from utils.database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
+from utils.robot import monitor_and_trade
+from utils.technical_analysis import run_technical_analysis
 import os
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
