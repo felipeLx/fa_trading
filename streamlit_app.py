@@ -39,9 +39,9 @@ def logout():
 def main():
     st.title("InvestFal Dashboard")
     # Handle OAuth callback
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params
     if "code" in query_params:
-        code = query_params["code"][0]
+        code = query_params["code"][0] if isinstance(query_params["code"], list) else query_params["code"]
         flow = st.session_state.get('flow')
         if flow:
             flow.fetch_token(code=code)
