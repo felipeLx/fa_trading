@@ -90,7 +90,7 @@ def fetch_balance_sheet_data(ticker):
         "id, ticker, end_date, total_current_assets, total_current_liabilities, total_liabilities, total_stockholder_equity, current_ratio, debt_to_equity_ratio"
     ).eq("ticker", ticker).order("end_date", desc=True).execute()
 
-    if data.status_code == 200 and data.data:
+    if data.data:
         return data.data
     else:
         print(f"Failed to fetch balance sheet data for {ticker}: {data.error}")
@@ -102,7 +102,7 @@ def fetch_historical_prices(ticker):
         "id, ticker, date, open, high, low, close, volume, adjusted_close"
     ).eq("ticker", ticker).order("date", desc=True).execute()
 
-    if data.status_code == 200 and data.data:
+    if data.data:
         return data.data
     else:
         print(f"Failed to fetch historical prices for {ticker}: {data.error}")
@@ -114,7 +114,7 @@ def fetch_daily_analysis(ticker):
         "id, date, close_price, short_ma, long_ma, rsi, macd, signal_line"
     ).eq("ticker", ticker).order("date", desc=True).execute()
 
-    if data.status_code == 200 and data.data:
+    if data.data:
         return data.data
     else:
         print(f"Failed to fetch daily analysis data for {ticker}: {data.error}")
@@ -126,7 +126,7 @@ def fetch_yearly_analysis(ticker):
         "id, date, close_price, ticker"
     ).eq("ticker", ticker).order("date", desc=True).execute()
 
-    if data.status_code == 200 and data.data:
+    if data.data:
         return data.data
     else:
         print(f"Failed to fetch yearly analysis data for {ticker}: {data.error}")

@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 from utils.database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
-from utils.robot import monitor_and_trade
-from utils.technical_analysis import run_technical_analysis
+#from utils.robot import monitor_and_trade
+#from utils.technical_analysis import run_technical_analysis
 import os
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -102,7 +102,7 @@ def main():
             st.header("Find the Best Asset to Trade")
             if st.button("Run Technical Analysis"):
                 st.write("Running technical analysis to find the best asset...")
-                run_technical_analysis()
+                # run_technical_analysis()
                 st.success("Technical analysis completed. Check the database for results.")
 
         elif page == "Run Robot":
@@ -111,7 +111,7 @@ def main():
                 st.write("Starting the trading robot...")
                 account_balance = 10000  # Example account balance in R$
                 risk_per_trade = 0.02  # Risk 2% of account balance per trade
-                monitor_and_trade(account_balance, risk_per_trade)
+                # monitor_and_trade(account_balance, risk_per_trade)
                 st.success("Trading robot is running.")
 
 if __name__ == "__main__":
