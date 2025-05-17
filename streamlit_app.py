@@ -64,9 +64,14 @@ def main():
         # Not logged in
         if st.button("Login with Google"):
             login()
+            st.session_state['show_auth_link'] = True
             st.rerun()
-        if st.session_state.get('login_requested'):
-            st.markdown(f"[Click here to authenticate]({st.session_state['auth_url']})")
+
+        if st.session_state.get('show_auth_link') and st.session_state.get('auth_url'):
+            st.markdown(
+                f'<a href="{st.session_state["auth_url"]}" target="_self" style="display:inline-block; padding:0.5em 1em; background:#4285F4; color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Authenticate with Google</a>',
+                unsafe_allow_html=True
+            )
 
     if 'credentials' in st.session_state:
         # Navigation
