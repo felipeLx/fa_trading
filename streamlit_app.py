@@ -58,7 +58,10 @@ def main():
             st.write("No historical price data available.")
 
     elif page == "See Charts":
+        tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
+        selected_ticker = st.selectbox("Select Ticker:", tickers, index=0)
         st.header(f"Charts for {selected_ticker}")
+        st.subheader(f"Data for {selected_ticker}")
 
         st.write("### Daily Analysis Line Chart")
         daily_analysis_data = fetch_daily_analysis(selected_ticker)
@@ -83,7 +86,7 @@ def main():
                 st.write("No suitable columns for chart in historical prices data.")
         else:
             st.write("No historical price data available.")
-            
+
     elif page == "Best Asset to Trade":
         st.header("Find the Best Asset to Trade")
         if st.button("Run Technical Analysis"):
