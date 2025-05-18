@@ -28,19 +28,19 @@ def main():
         st.subheader(f"Data for {selected_ticker}")
         st.write("### Balance Sheet Data")
         balance_sheet_data = fetch_balance_sheet_data(selected_ticker)
-        if not balance_sheet_data.empty:
+        if not balance_sheet_data:
             st.dataframe(balance_sheet_data)
         else:
             st.write("No balance sheet data available.")
         st.write("### Asset Analysis Data")
         asset_analysis_data = fetch_asset_analysis(selected_ticker)
-        if not asset_analysis_data.empty:
+        if not asset_analysis_data:
             st.dataframe(asset_analysis_data)
         else:
             st.write("No asset analysis data available.")
         st.write("### Historical Prices and Indicators")
         historical_prices = fetch_historical_prices(selected_ticker)
-        if not historical_prices.empty:
+        if not historical_prices:
             st.dataframe(historical_prices)
             st.line_chart(historical_prices.set_index("date")["close"])
         else:
