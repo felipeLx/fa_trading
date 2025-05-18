@@ -42,7 +42,7 @@ def main():
         historical_prices = fetch_historical_prices(selected_ticker)
         if historical_prices:
             st.dataframe(historical_prices)
-            st.line_chart(historical_prices.set_index("date")["close"])
+            st.line_chart(historical_prices.sort_values("date", ascending = False)["close"])
         else:
             st.write("No historical price data available.")
 
