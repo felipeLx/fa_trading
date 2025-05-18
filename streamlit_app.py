@@ -38,9 +38,9 @@ def logout():
 
 def main():
     st.title("InvestFal Dashboard")
-    # Handle OAuth callback
     query_params = st.query_params
-    if "code" in query_params:
+    # 1. Handle OAuth callback
+    if "code" in query_params and 'credentials' not in st.session_state:
         code = query_params["code"][0] if isinstance(query_params["code"], list) else query_params["code"]
         flow = st.session_state.get('flow')
         if flow:
@@ -49,8 +49,12 @@ def main():
             st.session_state['credentials'] = credentials
             st.session_state['login_requested'] = False
             st.experimental_set_query_params()  # Clean up URL after login
+            st.rerun()  # Rerun to show dashboard
+        else:
+            st.error("OAuth flow not found. Please try again.")
+            return
 
-    # If logged in, show user info and logout
+    # 2. If logged in, show dashboard
     if 'credentials' in st.session_state:
         credentials = st.session_state['credentials']
         service = build('oauth2', 'v2', credentials=credentials)
@@ -62,9 +66,8 @@ def main():
             st.rerun()
         # ... your dashboard code here ...
     else:
-        # Not logged in: show only the Authenticate with Google button
+        # 3. Not logged in and not in callback: show only the Authenticate with Google button
         if 'flow' not in st.session_state or 'auth_url' not in st.session_state:
-            # Create the flow and auth_url on first load
             login()
         st.markdown(
             f'<a href="{st.session_state["auth_url"]}" style="display:inline-block; padding:0.5em 1em; background:#4285F4; color:white; border-radius:4px; text-decoration:none; font-weight:bold;">Authenticate with Google</a>',
