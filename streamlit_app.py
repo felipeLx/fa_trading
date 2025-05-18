@@ -16,7 +16,7 @@ def main():
      #   st.warning("You must be logged in to access this app.")
    #     st.stop()
 
-    st.sidebar.write(f"Logged in as: {user.email}")
+    #st.sidebar.write(f"Logged in as: {user.email}")
         # Navigation
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ["Asset Overview", "Best Asset to Trade", "Run Robot"])
