@@ -40,9 +40,9 @@ def main():
             st.write("No asset analysis data available.")
         st.write("### Historical Prices and Indicators")
         historical_prices = fetch_historical_prices(selected_ticker)
-        if historical_prices:
-            st.dataframe(historical_prices)
-            st.line_chart(historical_prices.sort_values("date", ascending = False)["close"])
+        st.dataframe(historical_prices)
+        if "date" in historical_prices.columns and "close" in historical_prices.columns:
+            st.line_chart(historical_prices.sort_values("date")["close"])
         else:
             st.write("No historical price data available.")
 
