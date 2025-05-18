@@ -154,7 +154,7 @@ def fetch_asset_analysis(ticker):
     """Fetch analysis results for a specific ticker from the asset_analysis table."""
     result = supabase.table("asset_analysis").select(
         "ticker, forward_pe, profit_margins, beta, dividend_yield, peg_ratio"
-    ).eq("ticker", ticker).order("analysis_date", desc=True).execute()
+    ).eq("ticker", ticker).order("created_at", desc=True).execute()
 
     if result.status_code == 200 and result.data:
         return result.data
