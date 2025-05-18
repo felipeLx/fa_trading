@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.database import fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
+from utils.database import fetch_daily_analysis, fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
 #from utils.robot import monitor_and_trade
 #from utils.technical_analysis import run_technical_analysis
 import os
@@ -19,7 +19,7 @@ def main():
     #st.sidebar.write(f"Logged in as: {user.email}")
         # Navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.radio("Go to", ["Asset Overview", "Best Asset to Trade", "Run Robot"])
+    page = st.sidebar.radio("Go to", ["Asset Overview", "See Charts", "Best Asset to Trade", "Run Robot"])
 
     if page == "Asset Overview":
         st.header("Asset Overview")
@@ -32,12 +32,22 @@ def main():
             st.dataframe(balance_sheet_data)
         else:
             st.write("No balance sheet data available.")
+        
         st.write("### Asset Analysis Data")
         asset_analysis_data = fetch_asset_analysis(selected_ticker)
         if asset_analysis_data:
             st.dataframe(asset_analysis_data)
         else:
             st.write("No asset analysis data available.")
+        
+        st.write("### Daily Analysis Data")
+        daily_analysis_data = fetch_daily_analysis(selected_ticker)
+        if daily_analysis_data:
+            daily_df = pd.DataFrame(daily_analysis_data)
+            st.dataframe(daily_df)
+        else:
+            st.write("No daily analysis data available.")
+
         st.write("### Historical Prices and Indicators")
         historical_prices = fetch_historical_prices(selected_ticker)
         historical_prices = pd.DataFrame(historical_prices)
@@ -47,6 +57,33 @@ def main():
         else:
             st.write("No historical price data available.")
 
+    elif page == "See Charts":
+        st.header(f"Charts for {selected_ticker}")
+
+        st.write("### Daily Analysis Line Chart")
+        daily_analysis_data = fetch_daily_analysis(selected_ticker)
+        if daily_analysis_data:
+            daily_df = pd.DataFrame(daily_analysis_data)
+            if "date" in daily_df.columns and "close" in daily_df.columns:
+                daily_df = daily_df.sort_values("date")
+                st.line_chart(daily_df.set_index("date")["close"])
+            else:
+                st.write("No suitable columns for chart in daily analysis data.")
+        else:
+            st.write("No daily analysis data available.")
+
+        st.write("### Historical Prices Line Chart")
+        historical_prices = fetch_historical_prices(selected_ticker)
+        if historical_prices:
+            historical_prices = pd.DataFrame(historical_prices)
+            if "date" in historical_prices.columns and "close" in historical_prices.columns:
+                historical_prices = historical_prices.sort_values("date")
+                st.line_chart(historical_prices.set_index("date")["close"])
+            else:
+                st.write("No suitable columns for chart in historical prices data.")
+        else:
+            st.write("No historical price data available.")
+            
     elif page == "Best Asset to Trade":
         st.header("Find the Best Asset to Trade")
         if st.button("Run Technical Analysis"):
