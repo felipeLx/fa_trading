@@ -60,18 +60,26 @@ def main():
     elif page == "See Charts":
         tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
         selected_ticker = st.selectbox("Select Ticker:", tickers, index=0)
-        st.header(f"Charts for {selected_ticker}")
-        st.subheader(f"Data for {selected_ticker}")
-
         st.write("### Daily Analysis Line Chart")
+        st.header(f"Charts for {selected_ticker}")
+
         daily_analysis_data = fetch_daily_analysis(selected_ticker)
         if daily_analysis_data:
             daily_df = pd.DataFrame(daily_analysis_data)
-            if "date" in daily_df.columns and "close" in daily_df.columns:
-                daily_df = daily_df.sort_values("date")
-                st.line_chart(daily_df.set_index("date")["close"])
-            else:
-                st.write("No suitable columns for chart in daily analysis data.")
+            # Price and Moving Averages
+            st.line_chart(
+                daily_df.set_index("date")[["close_price", "short_ma", "long_ma"]]
+            )
+
+            # RSI
+            st.line_chart(
+                daily_df.set_index("date")[["rsi"]]
+            )
+
+            # MACD and Signal Line
+            st.line_chart(
+                daily_df.set_index("date")[["macd", "signal_line"]]
+            )
         else:
             st.write("No daily analysis data available.")
 
