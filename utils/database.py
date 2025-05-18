@@ -93,7 +93,7 @@ def fetch_balance_sheet_data(ticker):
     if data.data:
         return data.data
     else:
-        print(f"Failed to fetch balance sheet data for {ticker}: {data.error}")
+        print(f"Failed to fetch balance sheet data for {ticker}")
         return None
 
 def fetch_historical_prices(ticker):
@@ -105,7 +105,7 @@ def fetch_historical_prices(ticker):
     if data.data:
         return data.data
     else:
-        print(f"Failed to fetch historical prices for {ticker}: {data.error}")
+        print(f"Failed to fetch historical prices for {ticker}")
         return None
 
 def fetch_daily_analysis(ticker):
@@ -117,7 +117,7 @@ def fetch_daily_analysis(ticker):
     if data.data:
         return data.data
     else:
-        print(f"Failed to fetch daily analysis data for {ticker}: {data.error}")
+        print(f"Failed to fetch daily analysis data for {ticker}")
         return None
 
 def fetch_yearly_analysis(ticker):
@@ -129,7 +129,7 @@ def fetch_yearly_analysis(ticker):
     if data.data:
         return data.data
     else:
-        print(f"Failed to fetch yearly analysis data for {ticker}: {data.error}")
+        print(f"Failed to fetch yearly analysis data for {ticker}")
         return None
 
 def insert_asset_analysis(data):
