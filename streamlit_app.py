@@ -52,10 +52,7 @@ def main():
         historical_prices = fetch_historical_prices(selected_ticker)
         historical_prices = pd.DataFrame(historical_prices)
         st.dataframe(historical_prices)
-        if "date" in historical_prices.columns and "close" in historical_prices.columns:
-            st.line_chart(historical_prices.sort_values("date")["close"])
-        else:
-            st.write("No historical price data available.")
+        
 
     elif page == "See Charts":
         tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
