@@ -66,17 +66,17 @@ def main():
         daily_analysis_data = fetch_daily_analysis(selected_ticker)
         if daily_analysis_data:
             daily_df = pd.DataFrame(daily_analysis_data)
-            # Price and Moving Averages
+            st.write("Price and Moving Averages")
             st.line_chart(
                 daily_df.set_index("date")[["close_price", "short_ma", "long_ma"]]
             )
 
-            # RSI
+            st.write("RSI")
             st.line_chart(
                 daily_df.set_index("date")[["rsi"]]
             )
 
-            # MACD and Signal Line
+            st.write("MACD and Signal Line")
             st.line_chart(
                 daily_df.set_index("date")[["macd", "signal_line"]]
             )
