@@ -156,8 +156,8 @@ def fetch_asset_analysis(ticker):
         "ticker, forward_pe, profit_margins, beta, dividend_yield, peg_ratio"
     ).eq("ticker", ticker).order("created_at", desc=True).execute()
 
-    if result.status_code == 200 and result.data:
+    if result.data:
         return result.data
     else:
-        print(f"Failed to fetch asset analysis data for {ticker}: {result.error}")
+        print(f"Failed to fetch asset analysis data for {ticker}")
         return None
