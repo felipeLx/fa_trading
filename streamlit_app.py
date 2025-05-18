@@ -12,9 +12,9 @@ def main():
     st.title("InvestFal Dashboard")
    
     user = getattr(st, "user", None)
-    if not user:
-        st.warning("You must be logged in to access this app.")
-        st.stop()
+    #if not user:
+     #   st.warning("You must be logged in to access this app.")
+   #     st.stop()
 
     st.sidebar.write(f"Logged in as: {user.email}")
         # Navigation
