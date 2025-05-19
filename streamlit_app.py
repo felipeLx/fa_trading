@@ -1,11 +1,10 @@
 import streamlit as st
 import pandas as pd
 from utils.database import fetch_daily_analysis, fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
-#from utils.robot import monitor_and_trade
-#from utils.technical_analysis import run_technical_analysis
-import os
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+import plotly.graph_objects as go
+
 
 
 def main():
@@ -84,11 +83,21 @@ def main():
         historical_prices = fetch_historical_prices(selected_ticker)
         if historical_prices:
             historical_prices = pd.DataFrame(historical_prices)
-            if "date" in historical_prices.columns and "close" in historical_prices.columns:
+            # Check for required columns
+            required_cols = {"date", "open", "high", "low", "close"}
+            if required_cols.issubset(historical_prices.columns):
                 historical_prices = historical_prices.sort_values("date")
-                st.line_chart(historical_prices.set_index("date")["close"])
+                fig = go.Figure(data=[go.Candlestick(
+                    x=historical_prices["date"],
+                    open=historical_prices["open"],
+                    high=historical_prices["high"],
+                    low=historical_prices["low"],
+                    close=historical_prices["close"]
+                )])
+                fig.update_layout(xaxis_title="Date", yaxis_title="Price", title="Candlestick Chart")
+                st.plotly_chart(fig, use_container_width=True)
             else:
-                st.write("No suitable columns for chart in historical prices data.")
+                st.write("No suitable columns (open, high, low, close) for candlestick chart in historical prices data.")
         else:
             st.write("No historical price data available.")
 
