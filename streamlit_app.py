@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils.database import fetch_daily_analysis, fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis
+from utils.database import fetch_daily_analysis, fetch_historical_prices, fetch_balance_sheet_data, fetch_asset_analysis, fetch_intraday_prices
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 import plotly.graph_objects as go
@@ -49,9 +49,19 @@ def main():
 
         st.write("### Historical Prices and Indicators")
         historical_prices = fetch_historical_prices(selected_ticker)
-        historical_prices = pd.DataFrame(historical_prices)
-        st.dataframe(historical_prices)
+        if historical_prices:
+            historical_prices = pd.DataFrame(historical_prices)
+            st.dataframe(historical_prices)
+        else:
+            st.write("No historical price data available.")
         
+        st.write("### Intraday Prices Candlestick DataFrame")
+        intraday_data = fetch_intraday_prices(selected_ticker)
+        if intraday_data:
+            intraday_df = pd.DataFrame(intraday_data)
+            st.dataframe(intraday_df)
+        else:
+            st.write("No intraday price data available.")
 
     elif page == "See Charts":
         tickers = ["PETR4", "VALE3", "ITUB4", "AMER3", "B3SA3", "MGLU3", "LREN3", "ITSA4", "BBAS3", "RENT3", "ABEV3", "SUZB3", "WEG3", "BRFS3", "BBDC4", "CRFB3", "BPAC11", "GGBR3", "EMBR3", "CMIN3", "ITSA4", "RDOR3", "RAIZ4", "PETZ3", "PSSA3", "VBBR3"]
@@ -78,6 +88,30 @@ def main():
             )
         else:
             st.write("No daily analysis data available.")
+
+        st.write("### Intraday Prices Candlestick Chart")
+        intraday_data = fetch_intraday_prices(selected_ticker)
+        if intraday_data:
+            required_cols = {"date", "open", "high", "low", "close"}
+            if required_cols.issubset(intraday_df.columns):
+                intraday_df = intraday_df.sort_values("date")
+                fig = go.Figure(data=[go.Candlestick(
+                    x=intraday_df["date"],
+                    open=intraday_df["open"],
+                    high=intraday_df["high"],
+                    low=intraday_df["low"],
+                    close=intraday_df["close"]
+                )])
+                fig.update_layout(
+                    xaxis_title="Date/Time",
+                    yaxis_title="Price",
+                    title="Intraday Candlestick Chart"
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.write("No suitable columns (open, high, low, close) for candlestick chart in intraday prices data.")
+        else:
+            st.write("No intraday price data available.")
 
         st.write("### Historical Prices Line Chart")
         historical_prices = fetch_historical_prices(selected_ticker)
